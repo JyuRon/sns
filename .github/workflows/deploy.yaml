@@ -35,6 +35,14 @@ jobs:
         run: chmod +x ./gradlew
         shell: bash
 
+      - name: Node Setup
+        run: ./gradlew nodeSetup
+        shell: bash
+
+      - name: Install npm package.json
+        run: ./gradlew nodeSetup
+        shell: bash
+
       - name: Build with Gradle
         run: ./gradlew build
         shell: bash
