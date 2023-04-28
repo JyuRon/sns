@@ -40,7 +40,7 @@ jobs:
         shell: bash
 
       - name: Install npm package.json
-        run: ./gradlew nodeSetup
+        run: ./gradlew npmInstall
         shell: bash
 
       - name: Build with Gradle
