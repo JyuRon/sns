@@ -34,15 +34,13 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
         shell: bash
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
-      - name: Check Node v # Node v 확인
-        run: node -v
-
-      - name: Install Dependencies # 의존 파일 설치
-        run: yarn install --frozen-lockfile
-
-      - name: Build # React Build
-        run: yarn build
+      - name: Install yarn
+        run: npm install -g yarn@1.22.17
 
       - name: Build with Gradle
         run: ./gradlew build
