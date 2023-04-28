@@ -44,10 +44,11 @@ node {
 	nodeProjectDir = file("$projectDir/front-end")
 	version = '18.3.0'
 	download = true
+	npmInstallCommand = 'ci'
 }
 
 task npmBuild(type: NpmTask) {
-	args = ["CI=''","run", "build"]
+	args = ["run", "build"]
 }
 
 task copyFrontEnd(type: Copy) {
