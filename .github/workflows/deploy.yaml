@@ -32,7 +32,7 @@ jobs:
           kakao.rest.api.key: ${{ secrets.DI_FROM_SECRET }}
 
       - name: Install npm Dependency
-        run: npm install
+        run: npm ci
 
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
