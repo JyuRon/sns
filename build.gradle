@@ -44,7 +44,7 @@ node {
 	nodeProjectDir = file("$projectDir/front-end")
 	version = '18.3.0'
 	download = true
-	npmInstallCommand = 'ci'
+	npmInstallCommand = System.getenv("CI") ? 'ci' : 'install'
 }
 
 task npmBuild(type: NpmTask) {
