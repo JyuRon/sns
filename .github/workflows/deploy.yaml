@@ -35,13 +35,14 @@ jobs:
         run: chmod +x ./gradlew
         shell: bash
 
-      - name: Node Setup
-        run: ./gradlew nodeSetup
-        shell: bash
+      - name: Check Node v # Node v 확인
+        run: node -v
 
-      - name: Install npm package.json
-        run: ./gradlew npmInstall
-        shell: bash
+      - name: Install Dependencies # 의존 파일 설치
+        run: yarn install --frozen-lockfile
+
+      - name: Build # React Build
+        run: yarn build
 
       - name: Build with Gradle
         run: ./gradlew build
