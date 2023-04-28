@@ -35,8 +35,6 @@ jobs:
         run: chmod +x ./gradlew
         shell: bash
 
-      - run: CI='false' npm run build
-
       - name: Build with Gradle
         run: ./gradlew build
         shell: bash
