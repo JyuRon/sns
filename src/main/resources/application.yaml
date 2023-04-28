@@ -3,3 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/board
     username: jyuka
     password: 1234
+
+kakao:
+  rest:
+    api:
+      key: ${KAKAO_REST_API_KEY}
