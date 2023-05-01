@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
 
     private final UserAccountRepository userEntityRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public UserDto join(String userName, String password){
         userEntityRepository.findByUserName(userName)
@@ -21,7 +22,7 @@ public class UserService {
                 })
         ;
 
-        UserAccount userAccount = userEntityRepository.save(UserAccount.of(userName, password));
+        UserAccount userAccount = userEntityRepository.save(UserAccount.of(userName, passwordEncoder.encode(password)));
 
         return UserDto.fromEntity(userAccount);
     }
