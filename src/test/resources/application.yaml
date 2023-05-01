@@ -2,3 +2,8 @@ spring:
   datasource:
     url: jdbc:h2:mem:board;mode=postgresql
     driver-class-name: org.h2.Driver
+
+jwt:
+  secret-key: Task :prepareKotlinBuildScriptModel UP-TO-DATE
+  # 30 days : 24 * 60 * 60 * 30 (ms 단위)
+  token.expired-time-ms: 2592000000
