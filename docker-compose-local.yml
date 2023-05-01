@@ -1,0 +1,16 @@
+# 해당 버전은 yml 파일에 대한 문서 버전 표기며 docker engine 버전 마다 표기가 달라진다.
+# https://docs.docker.com/compose/compose-file/compose-versioning/
+
+version: "3.8"                                          # 파일 규격 버전
+services:                                               # 컨테이너의 집합체, 이곳에 실행하려는 컨테이너들을 정의
+  sns-database:
+    container_name: sns-database
+    image: 'postgres:14'
+    environment:                                        # 컨테이너의 생성시 사용되는 환경 변수
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+#    volumes:
+#      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
