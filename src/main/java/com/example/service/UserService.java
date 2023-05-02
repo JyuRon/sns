@@ -55,6 +55,13 @@ public class UserService {
         return token;
     }
 
+    public UserDto loadUserByUserName(String userName){
+        return userEntityRepository.findByUserName(userName)
+                .map(UserDto::fromEntity)
+                .orElseThrow(() ->
+                    new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded",userName)));
+    }
+
      void settingJwtValues(String key, Long expiredTimeMs){
         this.secretKey = key;
         this.expiredTimeMs = expiredTimeMs;

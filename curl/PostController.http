@@ -1,0 +1,17 @@
+### 게시글 등록
+
+POST http://localhost:8080/api/v1/posts
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxNjgzMDA5NzEwLCJleHAiOjE2ODU2MDE3MTB9.koyumowWLjKxQrTmqOofj9Z5fZMnlX9O_y41iOYYmoM
+
+< ./requestBody/PostCreate.json
+
+
+### 게시글 등록(운영)
+POST http://3.38.233.180:8080/api/v1/posts
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxNjgzMDA5NzEwLCJleHAiOjE2ODU2MDE3MTB9.koyumowWLjKxQrTmqOofj9Z5fZMnlX9O_y41iOYYmoM
+
+< ./requestBody/PostCreate.json
+
+
