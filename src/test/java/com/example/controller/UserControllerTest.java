@@ -1,11 +1,11 @@
 package com.example.controller;
 
-import com.example.config.SecurityConfig;
+import com.example.config.JwtConfig;
 import com.example.constant.ErrorCode;
+import com.example.dto.UserDto;
 import com.example.dto.request.UserJoinRequest;
 import com.example.dto.request.UserLoginRequest;
 import com.example.exception.SnsApplicationException;
-import com.example.dto.UserDto;
 import com.example.fixture.UserAccountFixture;
 import com.example.service.UserService;
 import com.example.util.FormDataEncoder;
@@ -24,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Import({FormDataEncoder.class, SecurityConfig.class})
+@Import({FormDataEncoder.class, JwtConfig.class})
 @WebMvcTest(UserController.class) // Controller Test 기법, 특정 클래스 지정 없을 경우 모든 controller 호출
 class UserControllerTest {
 

@@ -6,23 +6,19 @@ import com.example.fixture.UserAccountFixture;
 import com.example.domain.UserAccount;
 import com.example.repository.UserAccountRepository;
 import com.example.util.JwtTokenUtils;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -38,10 +34,8 @@ class UserServiceTest {
     @Mock
     private BCryptPasswordEncoder encoder;
 
-    @BeforeEach
-    void beforeAll(){
-        userService.settingJwtValues("Task :prepareKotlinBuildScriptModel UP-TO-DATE",100000L);
-    }
+    @Mock
+    private JwtTokenUtils jwtTokenUtils;
 
     @DisplayName("회원가입이 정상적으로 동작하는 경우")
     @Test
@@ -100,6 +94,7 @@ class UserServiceTest {
                 .willReturn(Optional.of(userEntity));
         given(encoder.matches(password, userEntity.getPassword()))
                 .willReturn(true);
+        given(jwtTokenUtils.generateToken(any())).willReturn("test_token");
 
         // When
         Throwable t = catchThrowable(() -> userService.login(userName, password));

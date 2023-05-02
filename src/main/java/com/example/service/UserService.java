@@ -18,12 +18,8 @@ public class UserService {
 
     private final UserAccountRepository userEntityRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtTokenUtils jwtTokenUtils;
 
-    @Value("${jwt.secret-key}")
-    private String secretKey;
-
-    @Value("${jwt.token.expired-time-ms}")
-    private Long expiredTimeMs;
 
     @Transactional
     public UserDto join(String userName, String password){
@@ -49,21 +45,16 @@ public class UserService {
         }
 
         // 토큰생성
-        String token = JwtTokenUtils.generateToken(userName, secretKey, expiredTimeMs);
+        String token = jwtTokenUtils.generateToken(userName);
 
 
         return token;
     }
 
-    public UserDto loadUserByUserName(String userName){
+    public UserDto loadUserByUserName(String userName) {
         return userEntityRepository.findByUserName(userName)
                 .map(UserDto::fromEntity)
                 .orElseThrow(() ->
-                    new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded",userName)));
-    }
-
-     void settingJwtValues(String key, Long expiredTimeMs){
-        this.secretKey = key;
-        this.expiredTimeMs = expiredTimeMs;
+                        new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
     }
 }

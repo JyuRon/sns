@@ -4,28 +4,41 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
+@Component
+@Getter
+@Setter
 public class JwtTokenUtils {
 
-    public static String getUserName(String token, String key){
-        return extractClaims(token, key).get("userName", String.class);
+    @Value("${jwt.secret-key}")
+    private String key;
+
+    @Value("${jwt.token.expired-time-ms}")
+    private Long expiredTimeMs;
+
+    public  String getUserName(String token){
+        return extractClaims(token).get("userName", String.class);
     }
 
-    public static boolean isExpired(String token, String key){
-        Date expiredDate = extractClaims(token, key).getExpiration();
+    public  boolean isExpired(String token){
+        Date expiredDate = extractClaims(token).getExpiration();
         return expiredDate.before(new Date());
     }
 
-    private static Claims extractClaims(String token, String key){
-        return Jwts.parserBuilder().setSigningKey(getKey(key))
+    private  Claims extractClaims(String token){
+        return Jwts.parserBuilder().setSigningKey(convertToByteKey(key))
                 .build().parseClaimsJws(token).getBody();
     }
 
-    public static String generateToken(String userName, String key, long expiredTimeMs){
+    public  String generateToken(String userName){
         Claims claims = Jwts.claims();
         claims.put("userName",userName);
 
@@ -33,12 +46,12 @@ public class JwtTokenUtils {
                 .setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis()+ expiredTimeMs))
-                .signWith(getKey(key), SignatureAlgorithm.HS256)
+                .signWith(convertToByteKey(key), SignatureAlgorithm.HS256)
                 .compact()
                 ;
     }
 
-    private static Key getKey(String key){
+    private Key convertToByteKey(String key){
         byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }

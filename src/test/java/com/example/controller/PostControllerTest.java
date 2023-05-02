@@ -54,6 +54,7 @@ class PostControllerTest {
         mockMvc
                 .perform(
                         post("/api/v1/posts")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(formDataEncoder.objectToJson(new PostCreatRequest(title, body)))
                 )

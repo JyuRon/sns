@@ -21,8 +21,8 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtTokenFilter extends OncePerRequestFilter {
 
-    private final String key;
     private final UserService userService;
+    private final JwtTokenUtils jwtTokenUtils;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
@@ -38,14 +38,14 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             final String token = header.split(" ")[1].trim();
 
             // Token is valid
-            if(JwtTokenUtils.isExpired(token, key)){
+            if(jwtTokenUtils.isExpired(token)){
                 log.error("Key is expired");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             // get userName for Token
-            String userName = JwtTokenUtils.getUserName(token, key);
+            String userName = jwtTokenUtils.getUserName(token);
 
             // userName Valid
             UserDto userDto = userService.loadUserByUserName(userName);
