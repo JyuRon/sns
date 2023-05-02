@@ -1,5 +1,6 @@
 package com.example.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,4 +28,14 @@ public class Post extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "userAccount_id")
     private UserAccount user;
+
+    public Post(String title, String body, UserAccount user) {
+        this.title = title;
+        this.body = body;
+        this.user = user;
+    }
+
+    public static Post of(String title, String body, UserAccount userAccount){
+        return new Post(title, body, userAccount);
+    }
 }

@@ -22,6 +22,6 @@ public class PostService {
         UserAccount userAccount = userAccountRepository.findByUserName(userName)
                 .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
 
-        postRepository.save(new Post());
+        postRepository.save(Post.of(title, body, userAccount));
     }
 }

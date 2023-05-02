@@ -17,7 +17,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
@@ -42,8 +41,9 @@ class PostServiceTest {
         String title = "title";
         String body = "body";
         String userName = "userName";
-        given(userAccountRepository.findByUserName(userName)).willReturn(Optional.of(any(UserAccount.class)));
-        given(postRepository.save(any())).willReturn(any(Post.class));
+        UserAccount userAccount = createUserAccount();
+        given(userAccountRepository.findByUserName(userName)).willReturn(Optional.of(userAccount));
+        given(postRepository.save(any())).willReturn(createPost(userAccount));
 
 
 
@@ -63,8 +63,7 @@ class PostServiceTest {
         String title = "title";
         String body = "body";
         String userName = "userName";
-        given(userAccountRepository.findByUserName(userName)).willReturn(Optional.of(any(UserAccount.class)));
-        given(postRepository.save(any())).willReturn(any(Post.class));
+        given(userAccountRepository.findByUserName(userName)).willReturn(Optional.empty());
 
         // When
         Throwable t = catchThrowable(() -> postService.create(title, body, userName));
@@ -75,4 +74,14 @@ class PostServiceTest {
                 .hasMessage(String.format("%s %s", ErrorCode.USER_NOT_FOUND.getMessage(), String.format("%s not founded",userName)))
         ;
     }
+
+    private UserAccount createUserAccount(){
+        return UserAccount.of("jyuka","1234");
+    }
+
+    private Post createPost(UserAccount userAccount){
+        return Post.of("title","content",userAccount);
+    }
+
+
 }
