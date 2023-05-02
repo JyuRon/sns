@@ -5,6 +5,7 @@ import com.example.domain.converter.UserRoleConverter;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
 
 import javax.persistence.*;
 
@@ -13,6 +14,7 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@SQLDelete(sql = "UPDATE \"user\" set deleted_at = now() where id=?")
 public class UserAccount extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
