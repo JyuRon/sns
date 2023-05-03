@@ -8,8 +8,11 @@ import com.example.dto.response.PostResponse;
 import com.example.dto.response.Response;
 import com.example.service.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -47,5 +50,24 @@ public class PostController {
     ){
         postService.delete(userDto.getUsername(), postId);
         return Response.success();
+    }
+
+
+    @GetMapping
+    public Response<Page<PostResponse>> list(
+            Pageable pageable,
+            @AuthenticationPrincipal UserDto userDto
+    ){
+        Page<PostResponse> result = postService.list(pageable).map(PostResponse::fromDto);
+        return Response.success(result);
+    }
+
+    @GetMapping("/my")
+    public Response<Page<PostResponse>> my(
+            Pageable pageable,
+            @AuthenticationPrincipal UserDto userDto
+    ){
+        Page<PostResponse> result = postService.my(userDto.getUsername(), pageable).map(PostResponse::fromDto);
+        return Response.success(result);
     }
 }

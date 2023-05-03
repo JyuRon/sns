@@ -14,14 +14,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.doThrow;
@@ -259,6 +260,82 @@ class PostControllerTest {
                 .andExpect(status().isNotFound())
         ;
     }
+
+
+    @DisplayName("피드 목록")
+    @Test
+    @WithMockUser
+    void giveNothingWithLogin_whenSelectPostList_thenReturnSuccess() throws Exception {
+        // Given
+        given(postService.list(any(Pageable.class)))
+                .willReturn(Page.empty());
+
+        // When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/posts")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+    }
+
+    @DisplayName("피드목록 요청시 로그인 하지 않은 경우")
+    @Test
+    @WithAnonymousUser
+    void givenNothing_whenSelectPostList_thenReturnFail() throws Exception {
+        // Given
+
+        // When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/posts")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @DisplayName("내 피드 목록")
+    @Test
+    @WithMockUser
+    void giveNothingWithLogin_whenMySelectPostList_thenReturnSuccess() throws Exception {
+        // Given
+        given(postService.my(anyString(), any(Pageable.class)))
+                .willReturn(Page.empty());
+
+        // When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/posts/my")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+    }
+
+    @DisplayName("내 피드목록 요청시 로그인 하지 않은 경우")
+    @Test
+    @WithAnonymousUser
+    void givenNothing_whenSelectMyPostList_thenReturnFail() throws Exception {
+        // Given
+
+        // When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/posts/my")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
 
     private static PostDto createPostDto(Long id, String title, String body, UserDto userDto){
         return PostDto.of(id, title, body, userDto, null, null, null);
