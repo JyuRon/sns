@@ -39,4 +39,13 @@ public class PostController {
 
         return Response.success(PostResponse.fromDto(postDto));
     }
+
+    @DeleteMapping("{postId}")
+    public Response<Void> delete(
+            @AuthenticationPrincipal UserDto userDto,
+            @PathVariable Long postId
+    ){
+        postService.delete(userDto.getUsername(), postId);
+        return Response.success();
+    }
 }
