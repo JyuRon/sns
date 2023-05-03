@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 
@@ -15,6 +16,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @SQLDelete(sql = "UPDATE \"user\" set deleted_at = now() where id=?")
+@Where(clause = "deleted_at is null")
 public class UserAccount extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
