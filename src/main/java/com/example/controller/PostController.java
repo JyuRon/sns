@@ -1,16 +1,15 @@
 package com.example.controller;
 
+import com.example.dto.PostDto;
 import com.example.dto.UserDto;
 import com.example.dto.request.PostCreatRequest;
+import com.example.dto.request.PostModifyRequest;
+import com.example.dto.response.PostResponse;
 import com.example.dto.response.Response;
 import com.example.service.PostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,5 +27,16 @@ public class PostController {
 
 
         return Response.success();
+    }
+
+    @PutMapping("/{postId}")
+    public Response<PostResponse> modify(
+            @RequestBody PostModifyRequest request,
+            @AuthenticationPrincipal UserDto userDto,
+            @PathVariable Long postId
+    ){
+        PostDto postDto = postService.modify(request.getTitle(), request.getBody(), userDto.getUsername(), postId);
+
+        return Response.success(PostResponse.fromDto(postDto));
     }
 }
