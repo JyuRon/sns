@@ -17,9 +17,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willDoNothing;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -155,6 +155,85 @@ class PostServiceTest {
 
         // When
         Throwable t = catchThrowable(() -> postService.modify(title, body, userName, postId));
+
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.INVALID_PERMISSION.getMessage(), String.format("%s has no permission with %s", userName, postId)));
+
+    }
+
+    @DisplayName("포스트 삭제가 성공한 경우")
+    @Test
+    void givenUserNameAndPostId_whenDeletePost_thenReturnSuccess(){
+        // Given
+        Long postId = 1L;
+        String userId = "jyuka";
+        UserAccount userAccount = createUserAccount(userId);
+        Post post = createPost(postId, "title", "body",userAccount);
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.of(post));
+        willDoNothing().given(postRepository).delete(any());
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.delete(userId,postId));
+
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+
+    }
+
+    @DisplayName("포스트 삭제시 포스트가 존재하지 않는 경우")
+    @Test
+    void givenNotExistPost_whenDeletePost_thenReturnFail(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount(userName);
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.delete(userName, postId));
+
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.POST_NOT_FOUND.getMessage(), String.format("%s not founded",postId)));
+
+    }
+
+    @DisplayName("포스트 수정시 권한이 없는 경우")
+    @Test
+    void givenAnotherUserPost_whenDeletePost_thenPermissionDenied(){
+        // Given
+        String title = "modifyTitle";
+        String body = "modifyBody";
+        String userName = "jyuka";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount(userName);
+        UserAccount anotherAccount = createUserAccount("jyuron");
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(anotherAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.of(createPost(1L, title, body, userAccount)));
+
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.delete(userName, postId));
 
 
         // Then
