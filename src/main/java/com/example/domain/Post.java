@@ -29,13 +29,18 @@ public class Post extends BaseEntity{
     @JoinColumn(name = "userAccount_id")
     private UserAccount user;
 
-    public Post(String title, String body, UserAccount user) {
+    public Post(Long id, String title, String body, UserAccount user) {
+        this.id = id;
         this.title = title;
         this.body = body;
         this.user = user;
     }
 
+    public static Post of(Long id, String title, String body, UserAccount userAccount){
+        return new Post(id, title, body, userAccount);
+    }
+
     public static Post of(String title, String body, UserAccount userAccount){
-        return new Post(title, body, userAccount);
+        return new Post(null, title, body, userAccount);
     }
 }

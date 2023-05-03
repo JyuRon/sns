@@ -18,6 +18,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,9 +42,9 @@ class PostServiceTest {
         String title = "title";
         String body = "body";
         String userName = "userName";
-        UserAccount userAccount = createUserAccount();
+        UserAccount userAccount = createUserAccount("jyuka");
         given(userAccountRepository.findByUserName(userName)).willReturn(Optional.of(userAccount));
-        given(postRepository.save(any())).willReturn(createPost(userAccount));
+        given(postRepository.save(any())).willReturn(createPost(1L, title, body, userAccount));
 
 
 
@@ -75,12 +76,100 @@ class PostServiceTest {
         ;
     }
 
-    private UserAccount createUserAccount(){
-        return UserAccount.of("jyuka","1234");
+    @DisplayName("포스트 수정이 성공한 경우")
+    @Test
+    void givenTitleAndBodyAndUserName_whenModifyPost_thenReturnSuccess(){
+        // Given
+        String title = "modifyTitle";
+        String body = "modifyBody";
+        String userName = "userName";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount("jyuka");
+        Post oldPost = createPost(postId, "title", "body",userAccount);
+        Post newPost = createPost(postId, title, body, userAccount);
+        given(userAccountRepository.findByUserName(userName))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.of(oldPost));
+        given(postRepository.save(any()))
+                .willReturn(newPost);
+
+
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.modify(title, body, userName, postId));
+
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+
     }
 
-    private Post createPost(UserAccount userAccount){
-        return Post.of("title","content",userAccount);
+    @DisplayName("포스트 수정시 포스트가 존재하지 않는 경우")
+    @Test
+    void givenNotExistPost_whenModifyPost_thenReturnFail(){
+        // Given
+        String title = "modifyTitle";
+        String body = "modifyBody";
+        String userName = "userName";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount("jyuka");
+        Post oldPost = createPost(1L, "title", "body",userAccount);
+
+        given(userAccountRepository.findByUserName(userName))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.modify(title, body, userName, postId));
+
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.POST_NOT_FOUND.getMessage(), String.format("%s not founded",postId)));
+
+    }
+
+    @DisplayName("포스트 수정시 권한이 없는 경우")
+    @Test
+    void givenAnotherUserPost_whenModifyPost_thenPermissionDenied(){
+        // Given
+        String title = "modifyTitle";
+        String body = "modifyBody";
+        String userName = "userName";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount("jyuka");
+        UserAccount anotherAccount = createUserAccount("jyuron");
+
+        given(userAccountRepository.findByUserName(userName))
+                .willReturn(Optional.of(anotherAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.of(createPost(1L, title, body, userAccount)));
+
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.modify(title, body, userName, postId));
+
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.INVALID_PERMISSION.getMessage(), String.format("%s has no permission with %s", userName, postId)));
+
+    }
+
+    private UserAccount createUserAccount(String userId){
+        return UserAccount.of(userId,"1234");
+    }
+
+    private Post createPost(Long id, String title, String content, UserAccount userAccount){
+        return Post.of(id, title,content,userAccount);
     }
 
 
