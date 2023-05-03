@@ -6,12 +6,15 @@ import com.example.domain.UserAccount;
 import com.example.exception.SnsApplicationException;
 import com.example.repository.PostRepository;
 import com.example.repository.UserAccountRepository;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -141,15 +144,16 @@ class PostServiceTest {
         // Given
         String title = "modifyTitle";
         String body = "modifyBody";
-        String userName = "userName";
+        String userName = "jyuka";
+        String anotherUserName = "jyuron";
         Long postId = 1L;
-        UserAccount userAccount = createUserAccount("jyuka");
-        UserAccount anotherAccount = createUserAccount("jyuron");
+        UserAccount userAccount = createUserAccount(userName);
+        UserAccount anotherAccount = createUserAccount(anotherUserName);
 
-        given(userAccountRepository.findByUserName(userName))
-                .willReturn(Optional.of(anotherAccount));
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
         given(postRepository.findById(anyLong()))
-                .willReturn(Optional.of(createPost(1L, title, body, userAccount)));
+                .willReturn(Optional.of(createPost(postId, title, body, anotherAccount)));
 
 
 
@@ -214,21 +218,22 @@ class PostServiceTest {
 
     }
 
-    @DisplayName("포스트 수정시 권한이 없는 경우")
+    @DisplayName("포스트 삭제시 권한이 없는 경우")
     @Test
     void givenAnotherUserPost_whenDeletePost_thenPermissionDenied(){
         // Given
         String title = "modifyTitle";
         String body = "modifyBody";
         String userName = "jyuka";
+        String anotherUserName = "jyuron";
         Long postId = 1L;
         UserAccount userAccount = createUserAccount(userName);
-        UserAccount anotherAccount = createUserAccount("jyuron");
+        UserAccount anotherAccount = createUserAccount(anotherUserName);
 
         given(userAccountRepository.findByUserName(anyString()))
-                .willReturn(Optional.of(anotherAccount));
+                .willReturn(Optional.of(userAccount));
         given(postRepository.findById(anyLong()))
-                .willReturn(Optional.of(createPost(1L, title, body, userAccount)));
+                .willReturn(Optional.of(createPost(1L, title, body, anotherAccount)));
 
 
 
@@ -243,6 +248,41 @@ class PostServiceTest {
 
     }
 
+    @DisplayName("피드 목록 요청이 성공한 경우")
+    @Test
+    void givenNothing_whenSelectPostList_thenReturnSuccess(){
+        // Given
+        Pageable pageable = Pageable.ofSize(20);
+        given(postRepository.findAll(eq(pageable)))
+                .willReturn(Page.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> postService.list(pageable));
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+    }
+
+    @DisplayName("내 피드 목록 요청이 성공한 경우")
+    @Test
+    void givenUserName_whenSelectMyPostList_thenReturnSuccess(){
+        // Given
+        Pageable pageable = Pageable.ofSize(20);
+        String userName = "jyuka";
+        UserAccount userAccount = createUserAccount(userName);
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findAllByUser(eq(userAccount), eq(pageable)))
+                .willReturn(Page.empty());
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.my(userName, pageable));
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+    }
+
     private UserAccount createUserAccount(String userId){
         return UserAccount.of(userId,"1234");
     }
@@ -250,6 +290,5 @@ class PostServiceTest {
     private Post createPost(Long id, String title, String content, UserAccount userAccount){
         return Post.of(id, title,content,userAccount);
     }
-
 
 }
