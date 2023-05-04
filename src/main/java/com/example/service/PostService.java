@@ -1,10 +1,12 @@
 package com.example.service;
 
 import com.example.constant.ErrorCode;
+import com.example.domain.Like;
 import com.example.domain.Post;
 import com.example.domain.UserAccount;
 import com.example.dto.PostDto;
 import com.example.exception.SnsApplicationException;
+import com.example.repository.LikeRepository;
 import com.example.repository.PostRepository;
 import com.example.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +24,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserAccountRepository userAccountRepository;
+    private final LikeRepository likeRepository;
 
     @Transactional
     public void create(String title, String body, String userName){
@@ -56,6 +61,26 @@ public class PostService {
         return postRepository.findAllByUser(userAccount, pageable).map(PostDto::fromEntity);
     }
 
+    @Transactional
+    public void like(Long postId, String userName) {
+        UserAccount userAccount = checkInvalidUserName(userName);
+        Post post = getPost(postId);
+
+        Optional<Like> like = likeRepository.findByUserAndPost(userAccount, post);
+
+        if(like.isPresent()){
+            likeRepository.delete(like.get());
+        }else {
+            likeRepository.save(Like.of(userAccount, post));
+        }
+    }
+
+    @Transactional
+    public Long likeCount(Long postId){
+        Post post = getPost(postId);
+
+        return likeRepository.countByPost(post);
+    }
 
     private UserAccount checkInvalidUserName(String userName){
         return userAccountRepository.findByUserName(userName)

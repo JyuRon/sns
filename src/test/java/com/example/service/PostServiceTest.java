@@ -1,9 +1,11 @@
 package com.example.service;
 
 import com.example.constant.ErrorCode;
+import com.example.domain.Like;
 import com.example.domain.Post;
 import com.example.domain.UserAccount;
 import com.example.exception.SnsApplicationException;
+import com.example.repository.LikeRepository;
 import com.example.repository.PostRepository;
 import com.example.repository.UserAccountRepository;
 import org.junit.jupiter.api.Disabled;
@@ -21,8 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -35,6 +36,9 @@ class PostServiceTest {
 
     @Mock
     private UserAccountRepository userAccountRepository;
+
+    @Mock
+    private LikeRepository likeRepository;
 
 
 
@@ -275,12 +279,106 @@ class PostServiceTest {
         given(postRepository.findAllByUser(eq(userAccount), eq(pageable)))
                 .willReturn(Page.empty());
 
-
         // When
         Throwable t = catchThrowable(() -> postService.my(userName, pageable));
 
         // Then
         assertThat(t).doesNotThrowAnyException();
+    }
+
+    @DisplayName("좋아요 버튼 클릭 후 정상적으로 카운트가 추가되는 경우")
+    @Test
+    void givenUserNameAndPostId_whenClickLikeButton_thenAddLike(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount(userName);
+        Post post = createPost(postId,"title", "content", userAccount);
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.of(post));
+        given(likeRepository.findByUserAndPost(any(UserAccount.class), any(Post.class)))
+                .willReturn(Optional.empty());
+        given(likeRepository.save(any(Like.class)))
+                .willReturn(Like.of(userAccount, post));
+
+        // When
+        Throwable t = catchThrowable(() -> postService.like(postId, userName));
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+        then(likeRepository).should().save(any(Like.class));
+    }
+
+    @DisplayName("좋아요 버튼 재 클릭 후 카운트가 감소하는 경우")
+    @Test
+    void givenUserNameAndPostId_whenReClickLikeButton_thenRemoveLike(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount(userName);
+        Post post = createPost(postId,"title", "content", userAccount);
+        Like like = createLike(userAccount, post);
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.of(post));
+        given(likeRepository.findByUserAndPost(any(UserAccount.class), any(Post.class)))
+                .willReturn(Optional.of(like));
+        willDoNothing().given(likeRepository).delete(any(Like.class));
+
+        // When
+        Throwable t = catchThrowable(() -> postService.like(postId, userName));
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+        then(likeRepository).should().delete(any(Like.class));
+    }
+
+    @DisplayName("좋아요 버튼을 클릭하였지만 게시글이 존재하지 않는 경우")
+    @Test
+    void givenPostIdAndUserName_whenClickLikeButton_thenNotExistPost(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount(userName);
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.like(postId, userName));
+
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.POST_NOT_FOUND.getMessage(), String.format("%s not founded",postId)));
+    }
+
+    @DisplayName("좋아요 버튼 클릭시 로그인을 하지 않은 경우")
+    @Test
+    void givenPostIdAndUserName_whenClickLikeButton_thenUserNotFound(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> postService.like(postId, userName));
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.USER_NOT_FOUND.getMessage(), String.format("%s not founded",userName)));
     }
 
     private UserAccount createUserAccount(String userId){
@@ -289,6 +387,10 @@ class PostServiceTest {
 
     private Post createPost(Long id, String title, String content, UserAccount userAccount){
         return Post.of(id, title,content,userAccount);
+    }
+
+    private Like createLike(UserAccount userAccount, Post post){
+        return Like.of(userAccount, post);
     }
 
 }
