@@ -23,9 +23,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -335,6 +335,66 @@ class PostControllerTest {
                 .andExpect(status().isUnauthorized())
         ;
     }
+
+    @DisplayName("좋아요 적용/취소 성공")
+    @Test
+    @WithMockUser
+    void givenNothing_whenClickLikeButton_thenReturnSuccess() throws Exception {
+        // Given
+        willDoNothing().given(postService).like(anyLong(), anyString());
+
+        // When & Then
+        mockMvc
+                .perform(
+                        post("/api/v1/posts/1/likes")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+        then(postService).should().like(anyLong(), anyString());
+    }
+
+    @DisplayName("좋아요 기능 클릭시 로그인 하지 않은 경우")
+    @Test
+    @WithAnonymousUser
+    void givenWithoutLogin_whenClickLikeButton_thenReturnFail() throws Exception {
+        // Given
+
+        // When & Then
+        mockMvc
+                .perform(
+                        post("/api/v1/posts/1/likes")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @DisplayName("좋아요 기능 클릭시 게시물이 없는 경우")
+    @Test
+    @WithMockUser
+    void givenNotExistPost_whenClickLikeButton_thenReturnFail() throws Exception {
+        // Given
+        doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND))
+                .when(postService).like(anyLong(), anyString());
+
+        // When & Then
+        mockMvc
+                .perform(
+                        post("/api/v1/posts/1/likes")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isNotFound())
+        ;
+    }
+
+
+
 
 
     private static PostDto createPostDto(Long id, String title, String body, UserDto userDto){

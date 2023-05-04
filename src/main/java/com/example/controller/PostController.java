@@ -70,4 +70,21 @@ public class PostController {
         Page<PostResponse> result = postService.my(userDto.getUsername(), pageable).map(PostResponse::fromDto);
         return Response.success(result);
     }
+
+    @PostMapping("/{postId}/likes")
+    public Response<Void> like(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDto userDto
+    ){
+        postService.like(postId, userDto.getUsername());
+        return Response.success();
+    }
+
+    @GetMapping("/{postId}/likes")
+    public Response<Long> likeCount(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDto userDto
+    ){
+        return Response.success(postService.likeCount(postId));
+    }
 }
