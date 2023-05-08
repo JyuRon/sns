@@ -2,6 +2,7 @@ package com.example.controller;
 
 import com.example.config.JwtConfig;
 import com.example.constant.ErrorCode;
+import com.example.constant.UserRole;
 import com.example.dto.UserDto;
 import com.example.dto.request.UserJoinRequest;
 import com.example.dto.request.UserLoginRequest;
@@ -15,11 +16,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.anyString;
+import java.time.LocalDateTime;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -148,5 +157,56 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isUnauthorized())
         ;
+    }
+
+    @DisplayName("알림 리스트를 정상적으로 호출한다.")
+    @Test
+    @WithMockUser
+    void givenUserNameAndPageable_whenSelectAlarmList_thenReturnSuccess() throws Exception{
+        //Given
+        given(userService.loadUserByUserName(anyString()))
+                .willReturn(createUserAccountDto());
+        given(userService.alarmList(anyString(), any(Pageable.class)))
+                .willReturn(Page.empty());
+
+        //When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/users/alarm")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+    }
+
+    @DisplayName("알림 리스트 호출 시 로그인을 하지 않은 경우")
+    @Test
+    @WithAnonymousUser
+    void givenUserNameAndPageable_whenSelectAlarmList_thenUnAuthorizedException() throws Exception{
+        //Given
+
+        //When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/users/alarm")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    private UserDto createUserAccountDto(){
+        return UserDto.of(
+                1L,
+                "jyukaTest",
+                "pw",
+                UserRole.USER,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                null
+        );
     }
 }

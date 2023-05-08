@@ -12,6 +12,10 @@ Content-Type: application/json
 
 < ./requestBody/UserLoginRequest.json
 
+### 알람 리스트 조회
+GET http://localhost:8080/api/v1/users/alarm
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxNjgzMDA5NzEwLCJleHAiOjE2ODU2MDE3MTB9.koyumowWLjKxQrTmqOofj9Z5fZMnlX9O_y41iOYYmoM
 
 ### 회원가입(운영)
 
