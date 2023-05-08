@@ -1,11 +1,15 @@
 package com.example.service;
 
 import com.example.constant.ErrorCode;
+import com.example.domain.Comment;
 import com.example.domain.Like;
 import com.example.domain.Post;
 import com.example.domain.UserAccount;
+import com.example.dto.CommentDto;
 import com.example.dto.PostDto;
+import com.example.dto.request.PostCommentRequest;
 import com.example.exception.SnsApplicationException;
+import com.example.repository.CommentRepository;
 import com.example.repository.LikeRepository;
 import com.example.repository.PostRepository;
 import com.example.repository.UserAccountRepository;
@@ -25,6 +29,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserAccountRepository userAccountRepository;
     private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository;
 
     @Transactional
     public void create(String title, String body, String userName){
@@ -80,6 +85,26 @@ public class PostService {
         Post post = getPost(postId);
 
         return likeRepository.countByPost(post);
+    }
+
+    @Transactional
+    public void comment(Long postId, String userName, PostCommentRequest postCommentRequest){
+        UserAccount userAccount = checkInvalidUserName(userName);
+        Post post = getPost(postId);
+
+        commentRepository.save(
+                Comment.of(postCommentRequest.getComment(), post, userAccount)
+        );
+
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<CommentDto> getComments(Long postId, Pageable pageable) {
+        Post post = getPost(postId);
+
+        return commentRepository.findAllByPost(post, pageable)
+                .map(CommentDto::fromEntity);
     }
 
     private UserAccount checkInvalidUserName(String userName){

@@ -1,10 +1,13 @@
 package com.example.service;
 
 import com.example.constant.ErrorCode;
+import com.example.domain.Comment;
 import com.example.domain.Like;
 import com.example.domain.Post;
 import com.example.domain.UserAccount;
+import com.example.dto.request.PostCommentRequest;
 import com.example.exception.SnsApplicationException;
+import com.example.repository.CommentRepository;
 import com.example.repository.LikeRepository;
 import com.example.repository.PostRepository;
 import com.example.repository.UserAccountRepository;
@@ -39,6 +42,9 @@ class PostServiceTest {
 
     @Mock
     private LikeRepository likeRepository;
+
+    @Mock
+    private CommentRepository commentRepository;
 
 
 
@@ -381,6 +387,114 @@ class PostServiceTest {
                 .hasMessage(String.format("%s %s", ErrorCode.USER_NOT_FOUND.getMessage(), String.format("%s not founded",userName)));
     }
 
+    @DisplayName("댓글 등록이 정상적으로 동작하는 경우")
+    @Test
+    void givenCommentRequestAndPostIdAndUserName_whenAddComment_thenReturnSuccess(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+        UserAccount userAccount = createUserAccount(userName);
+        Post post = createPost(postId,"title", "content", userAccount);
+        PostCommentRequest request = PostCommentRequest.of("comment");
+        Comment comment = createComment(request, post, userAccount);
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.of(post));
+        given(commentRepository.save(any(Comment.class)))
+                .willReturn(comment);
+
+        // When
+        Throwable t = catchThrowable(() -> postService.comment(postId, userName, request));
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+        then(commentRepository).should().save(any(Comment.class));
+    }
+
+    @DisplayName("댓글 작성시 로그인 하지 않은 경우")
+    @Test
+    void givenCommentRequestAndPostId_whenAddComment_thenReturnUnAuthorizedException(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+        PostCommentRequest request = PostCommentRequest.of("comment");
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> postService.comment(postId, userName, request));
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.USER_NOT_FOUND.getMessage(), String.format("%s not founded",userName)));
+    }
+
+    @DisplayName("댓글 작성시 게시글이 존재하지 않는 경우")
+    @Test
+    void givenCommentRequestAndPostIdAndUserName_whenAddComment_thenReturnPostNotFoundException(){
+        // Given
+        String userName = "jyuka";
+        Long postId = 1L;
+        PostCommentRequest request = PostCommentRequest.of("comment");
+        UserAccount userAccount = createUserAccount(userName);
+
+        given(userAccountRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userAccount));
+        given(postRepository.findById(anyLong()))
+                .willReturn(Optional.empty());
+
+
+        // When
+        Throwable t = catchThrowable(() -> postService.comment(postId, userName, request));
+
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.POST_NOT_FOUND.getMessage(), String.format("%s not founded",postId)));
+    }
+
+    @DisplayName("댓글 리스트 정상호출")
+    @Test
+    void givenPostId_whenSelectCommentList_thenReturnSuccess(){
+        // Given
+        Long postId = 1L;
+        Pageable pageable = Pageable.ofSize(20);
+        Post post = createPost(postId, "title", "conetent", createUserAccount("jyuka"));
+        given(postRepository.findById(anyLong())).willReturn(Optional.of(post));
+        given(commentRepository.findAllByPost(post, pageable)).willReturn(Page.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> postService.getComments(postId, pageable));
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+        then(commentRepository).should().findAllByPost(post, pageable);
+    }
+
+    @DisplayName("댓글 리스트 조회시 게시글이 존재하지 않는 경우")
+    @Test
+    void givenPostId_whenSelectCommentList_thenReturnPostNotFoundException(){
+        // Given
+        Long postId = 1L;
+        Pageable pageable = Pageable.ofSize(20);
+        given(postRepository.findById(anyLong())).willReturn(Optional.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> postService.getComments(postId, pageable));
+
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.POST_NOT_FOUND.getMessage(), String.format("%s not founded",postId)));
+    }
+
+
     private UserAccount createUserAccount(String userId){
         return UserAccount.of(userId,"1234");
     }
@@ -391,6 +505,10 @@ class PostServiceTest {
 
     private Like createLike(UserAccount userAccount, Post post){
         return Like.of(userAccount, post);
+    }
+
+    private Comment createComment(PostCommentRequest request, Post post, UserAccount userAccount){
+        return Comment.of(request.getComment(), post, userAccount);
     }
 
 }
