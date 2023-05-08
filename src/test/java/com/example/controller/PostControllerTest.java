@@ -4,6 +4,7 @@ import com.example.config.TestSecurityConfig;
 import com.example.constant.ErrorCode;
 import com.example.dto.PostDto;
 import com.example.dto.UserDto;
+import com.example.dto.request.PostCommentRequest;
 import com.example.dto.request.PostCreatRequest;
 import com.example.exception.SnsApplicationException;
 import com.example.service.PostService;
@@ -393,8 +394,113 @@ class PostControllerTest {
         ;
     }
 
+    @DisplayName("댓글 등록 성공")
+    @Test
+    @WithMockUser
+    void givenCommentRequestAndPostIdAndUserName_whenAddComment_thenReturnSuccess() throws Exception {
+        // Given
+        String comment = "is comment";
+        PostCommentRequest postCommentRequest = PostCommentRequest.of(comment);
+        willDoNothing().given(postService).comment(anyLong(), anyString(), any(PostCommentRequest.class));
+
+        // When & Then
+        mockMvc
+                .perform(
+                        post("/api/v1/posts/1/comments")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(formDataEncoder.objectToJson(postCommentRequest))
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+        then(postService).should().comment(anyLong(), anyString(), any(PostCommentRequest.class));
+    }
+
+    @DisplayName("댓글 작성시 로그인 하지 않은 경우")
+    @Test
+    @WithAnonymousUser
+    void givenCommentRequestAndPostId_whenAddComment_thenReturnUnAuthorizedException() throws Exception {
+        // Given
+        String comment = "is comment";
+        PostCommentRequest postCommentRequest = PostCommentRequest.of(comment);
+
+        // When & Then
+        mockMvc
+                .perform(
+                        post("/api/v1/posts/1/comments")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(formDataEncoder.objectToJson(postCommentRequest))
+                )
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @DisplayName("댓글 작성시 게시물이 없는 경우")
+    @Test
+    @WithMockUser
+    void givenCommentRequestAndPostIdAndUserName_whenAddComment_thenReturnPostNotFoundException() throws Exception {
+        // Given
+        String comment = "is comment";
+        PostCommentRequest postCommentRequest = PostCommentRequest.of(comment);
+        doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND))
+                .when(postService).comment(anyLong(), anyString(), any(PostCommentRequest.class));
+
+        // When & Then
+        mockMvc
+                .perform(
+                        post("/api/v1/posts/1/comments")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(formDataEncoder.objectToJson(postCommentRequest))
+                )
+                .andDo(print())
+                .andExpect(status().isNotFound())
+        ;
+        then(postService).should().comment(anyLong(), anyString(), any(PostCommentRequest.class));
+    }
 
 
+    @DisplayName("댓글 목록 조회 성공")
+    @Test
+    @WithMockUser
+    void givenPostIdAndPageable_whenSelectCommentList_thenReturnSuccess() throws Exception {
+        // Given
+        Long postId = 1L;
+        Pageable pageable = Pageable.ofSize(20);
+        given(postService.getComments(postId, pageable))
+                .willReturn(Page.empty());
+
+        // When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/posts/" + postId + "/comments")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer testToken")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+        then(postService).should().getComments(postId,pageable);
+    }
+
+    @DisplayName("댓글 작성시 로그인 하지 않은 경우")
+    @Test
+    @WithAnonymousUser
+    void givenPostIdAndPageable_whenSelectCommentList_thenUnAuthorizedException() throws Exception {
+        // Given
+
+        // When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/posts/1/comments")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print())
+                .andExpect(status().isUnauthorized())
+        ;
+    }
 
 
     private static PostDto createPostDto(Long id, String title, String body, UserDto userDto){

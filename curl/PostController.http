@@ -1,7 +1,7 @@
 ### 게시글 등록
 POST http://localhost:8080/api/v1/posts
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthMiIsImlhdCI6MTY4MzEwMzkyMCwiZXhwIjoxNjg1Njk1OTIwfQ.3TbMhj2Y9H0gqIoH9PDs0Ppsue6NSzzl3mvzy9aVnLc
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxNjgzMDA5NzEwLCJleHAiOjE2ODU2MDE3MTB9.koyumowWLjKxQrTmqOofj9Z5fZMnlX9O_y41iOYYmoM
 
 < ./requestBody/PostCreate.json
 
@@ -26,6 +26,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxN
 ### 내 피드 목록 조회
 #GET http://localhost:8080/api/v1/posts/my?size=1&page=3
 GET http://localhost:8080/api/v1/posts/my
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxNjgzMDA5NzEwLCJleHAiOjE2ODU2MDE3MTB9.koyumowWLjKxQrTmqOofj9Z5fZMnlX9O_y41iOYYmoM
+
+### 댓글 등록
+POST http://localhost:8080/api/v1/posts/1/comments
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxNjgzMDA5NzEwLCJleHAiOjE2ODU2MDE3MTB9.koyumowWLjKxQrTmqOofj9Z5fZMnlX9O_y41iOYYmoM
+
+< ./requestBody/CommentCreate.json
+
+### 댓글 목록 조회
+GET http://localhost:8080/api/v1/posts/1/comments
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyTmFtZSI6Imp5dWthIiwiaWF0IjoxNjgzMDA5NzEwLCJleHAiOjE2ODU2MDE3MTB9.koyumowWLjKxQrTmqOofj9Z5fZMnlX9O_y41iOYYmoM
 

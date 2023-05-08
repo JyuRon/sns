@@ -2,8 +2,10 @@ package com.example.controller;
 
 import com.example.dto.PostDto;
 import com.example.dto.UserDto;
+import com.example.dto.request.PostCommentRequest;
 import com.example.dto.request.PostCreatRequest;
 import com.example.dto.request.PostModifyRequest;
+import com.example.dto.response.CommentResponse;
 import com.example.dto.response.PostResponse;
 import com.example.dto.response.Response;
 import com.example.service.PostService;
@@ -87,4 +89,28 @@ public class PostController {
     ){
         return Response.success(postService.likeCount(postId));
     }
+
+
+    @PostMapping("/{postId}/comments")
+    public Response<Void> comment(
+            @PathVariable Long postId,
+            @RequestBody PostCommentRequest request,
+            @AuthenticationPrincipal UserDto userDto
+    ){
+        postService.comment(postId, userDto.getUsername(), request);
+        return Response.success();
+    }
+
+    @GetMapping("/{postId}/comments")
+    public Response<Page<CommentResponse>> comment(
+            @PathVariable Long postId,
+            @AuthenticationPrincipal UserDto userDto,
+            Pageable pageable
+    ){
+        return Response.success(
+                postService.getComments(postId, pageable)
+                .map(CommentResponse::fromDto)
+        );
+    }
+
 }
