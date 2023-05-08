@@ -42,6 +42,6 @@ public class Post extends BaseEntity{
     }
 
     public static Post of(String title, String body, UserAccount userAccount){
-        return new Post(null, title, body, userAccount);
+        return Post.of(null, title, body, userAccount);
     }
 }

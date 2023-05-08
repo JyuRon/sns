@@ -75,7 +75,7 @@ public class PostService {
         }
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public Long likeCount(Long postId){
         Post post = getPost(postId);
 
