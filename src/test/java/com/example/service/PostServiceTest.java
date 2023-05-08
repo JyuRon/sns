@@ -1,16 +1,12 @@
 package com.example.service;
 
+import com.example.constant.AlarmType;
 import com.example.constant.ErrorCode;
-import com.example.domain.Comment;
-import com.example.domain.Like;
-import com.example.domain.Post;
-import com.example.domain.UserAccount;
+import com.example.domain.*;
+import com.example.domain.columnDef.AlarmArgs;
 import com.example.dto.request.PostCommentRequest;
 import com.example.exception.SnsApplicationException;
-import com.example.repository.CommentRepository;
-import com.example.repository.LikeRepository;
-import com.example.repository.PostRepository;
-import com.example.repository.UserAccountRepository;
+import com.example.repository.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +41,9 @@ class PostServiceTest {
 
     @Mock
     private CommentRepository commentRepository;
+
+    @Mock
+    private AlarmRepository alarmRepository;
 
 
 
@@ -300,6 +299,7 @@ class PostServiceTest {
         Long postId = 1L;
         UserAccount userAccount = createUserAccount(userName);
         Post post = createPost(postId,"title", "content", userAccount);
+        Alarm alarm = createAlarm(post, AlarmType.LIKE_ON_POST, userAccount);
 
         given(userAccountRepository.findByUserName(anyString()))
                 .willReturn(Optional.of(userAccount));
@@ -309,6 +309,8 @@ class PostServiceTest {
                 .willReturn(Optional.empty());
         given(likeRepository.save(any(Like.class)))
                 .willReturn(Like.of(userAccount, post));
+        given(alarmRepository.save(any(Alarm.class)))
+                .willReturn(alarm);
 
         // When
         Throwable t = catchThrowable(() -> postService.like(postId, userName));
@@ -397,6 +399,7 @@ class PostServiceTest {
         Post post = createPost(postId,"title", "content", userAccount);
         PostCommentRequest request = PostCommentRequest.of("comment");
         Comment comment = createComment(request, post, userAccount);
+        Alarm alarm = createAlarm(post, AlarmType.NEW_COMMENT_ON_POST, userAccount);
 
         given(userAccountRepository.findByUserName(anyString()))
                 .willReturn(Optional.of(userAccount));
@@ -404,6 +407,8 @@ class PostServiceTest {
                 .willReturn(Optional.of(post));
         given(commentRepository.save(any(Comment.class)))
                 .willReturn(comment);
+        given(alarmRepository.save(any(Alarm.class)))
+                .willReturn(alarm);
 
         // When
         Throwable t = catchThrowable(() -> postService.comment(postId, userName, request));
@@ -509,6 +514,14 @@ class PostServiceTest {
 
     private Comment createComment(PostCommentRequest request, Post post, UserAccount userAccount){
         return Comment.of(request.getComment(), post, userAccount);
+    }
+
+    private Alarm createAlarm(Post post, AlarmType alarmType, UserAccount userAccount){
+        return Alarm.of(
+                post.getUser(),
+                alarmType,
+                AlarmArgs.of(userAccount.getId(), post.getId())
+        );
     }
 
 }

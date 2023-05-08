@@ -1,18 +1,14 @@
 package com.example.service;
 
+import com.example.constant.AlarmType;
 import com.example.constant.ErrorCode;
-import com.example.domain.Comment;
-import com.example.domain.Like;
-import com.example.domain.Post;
-import com.example.domain.UserAccount;
+import com.example.domain.*;
+import com.example.domain.columnDef.AlarmArgs;
 import com.example.dto.CommentDto;
 import com.example.dto.PostDto;
 import com.example.dto.request.PostCommentRequest;
 import com.example.exception.SnsApplicationException;
-import com.example.repository.CommentRepository;
-import com.example.repository.LikeRepository;
-import com.example.repository.PostRepository;
-import com.example.repository.UserAccountRepository;
+import com.example.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +26,7 @@ public class PostService {
     private final UserAccountRepository userAccountRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final AlarmRepository alarmRepository;
 
     @Transactional
     public void create(String title, String body, String userName){
@@ -77,6 +74,13 @@ public class PostService {
             likeRepository.delete(like.get());
         }else {
             likeRepository.save(Like.of(userAccount, post));
+            alarmRepository.save(
+                    Alarm.of(
+                            post.getUser(),
+                            AlarmType.LIKE_ON_POST,
+                            AlarmArgs.of(userAccount.getId(), post.getId())
+                    )
+            );
         }
     }
 
@@ -94,6 +98,14 @@ public class PostService {
 
         commentRepository.save(
                 Comment.of(postCommentRequest.getComment(), post, userAccount)
+        );
+
+        alarmRepository.save(
+                Alarm.of(
+                        post.getUser(),
+                        AlarmType.NEW_COMMENT_ON_POST,
+                        AlarmArgs.of(userAccount.getId(), postId)
+                )
         );
 
     }
