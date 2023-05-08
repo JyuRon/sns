@@ -4,6 +4,7 @@ import com.example.constant.ErrorCode;
 import com.example.exception.SnsApplicationException;
 import com.example.fixture.UserAccountFixture;
 import com.example.domain.UserAccount;
+import com.example.repository.AlarmRepository;
 import com.example.repository.UserAccountRepository;
 import com.example.util.JwtTokenUtils;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
@@ -30,6 +33,9 @@ class UserServiceTest {
 
     @Mock
     private UserAccountRepository userEntityRepository;
+
+    @Mock
+    private AlarmRepository alarmRepository;
 
     @Mock
     private BCryptPasswordEncoder encoder;
@@ -145,4 +151,45 @@ class UserServiceTest {
                 .hasMessage(String.format("%s", ErrorCode.INVALID_PASSWORD.getMessage()))
         ;
     }
+
+    @DisplayName("알림 리스트 조회 성공")
+    @Test
+    void givenUserNameAndPageable_whenSelectAlarmList_thenReturnSuccess(){
+        // Given
+        String userName = "userName";
+        String password = "password";
+        UserAccount userEntity = UserAccountFixture.get(userName, password);
+        Pageable pageable = Pageable.ofSize(20);
+
+        given(userEntityRepository.findByUserName(anyString()))
+                .willReturn(Optional.of(userEntity));
+        given(alarmRepository.findByUser(userEntity, pageable))
+                .willReturn(Page.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> userService.alarmList(userName, pageable));
+
+        // Then
+        assertThat(t).doesNotThrowAnyException();
+    }
+
+    @DisplayName("알림 리스트 조회 시 로그인을 하지 않은 경우")
+    @Test
+    void givenPageable_whenSelectAlarmList_thenReturnUserNotFoundException(){
+        // Given
+        String userName = "jyuka";
+        Pageable pageable = Pageable.ofSize(20);
+        given(userEntityRepository.findByUserName(anyString()))
+                .willReturn(Optional.empty());
+
+        // When
+        Throwable t = catchThrowable(() -> userService.alarmList(userName, pageable));
+
+        // Then
+        assertThat(t)
+                .isInstanceOf(SnsApplicationException.class)
+                .hasMessage(String.format("%s %s", ErrorCode.USER_NOT_FOUND.getMessage(), String.format("%s not founded",userName)))
+        ;
+    }
+
 }
