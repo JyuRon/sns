@@ -52,6 +52,8 @@ public class PostService {
         Post post = getPost(postId);
         checkAccessPost(userAccount, post);
         postRepository.delete(post);
+        likeRepository.deleteAllByPost(post);
+        commentRepository.deleteAllByPost(post);
     }
 
     public Page<PostDto> list(Pageable pageable){
