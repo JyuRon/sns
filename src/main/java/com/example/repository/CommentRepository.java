@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    Page<Comment> findAllByPost(Post post, Pageable pageable);
+    Page<Comment> findAllByPostId(Long postId, Pageable pageable);
 
     @Transactional
     @Modifying

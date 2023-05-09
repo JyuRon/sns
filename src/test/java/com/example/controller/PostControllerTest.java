@@ -57,7 +57,7 @@ class PostControllerTest {
         // Given
         String title = "title";
         String body = "body";
-        willDoNothing().given(postService).create(anyString(),anyString(),anyString());
+        willDoNothing().given(postService).create(anyString(),anyString(),anyLong());
 
         // When & Then
         mockMvc
@@ -79,7 +79,7 @@ class PostControllerTest {
         // Given
         String title = "title";
         String body = "body";
-        willDoNothing().given(postService).create(anyString(),anyString(),anyString());
+        willDoNothing().given(postService).create(anyString(),anyString(),anyLong());
 
         // When & Then
         mockMvc
@@ -100,7 +100,7 @@ class PostControllerTest {
         // Given
         String title = "title";
         String body = "body";
-        given(postService.modify(anyString(),anyString(),anyString(), anyLong()))
+        given(postService.modify(anyString(),anyString(),anyLong(), anyLong()))
                 .willReturn(createPostDto(1L, title, body, createUserDto(1L, "jyuka")))
         ;
 
@@ -124,7 +124,7 @@ class PostControllerTest {
         // Given
         String title = "title";
         String body = "body";
-        given(postService.modify(anyString(),anyString(),anyString(), anyLong()))
+        given(postService.modify(anyString(),anyString(),anyLong(), anyLong()))
                 .willThrow(new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", "jyuka")));
 
         // When & Then
@@ -146,7 +146,7 @@ class PostControllerTest {
         // Given
         String title = "title";
         String body = "body";
-        given(postService.modify(anyString(),anyString(),anyString(), anyLong()))
+        given(postService.modify(anyString(),anyString(),anyLong(), anyLong()))
                 .willThrow(new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission with %s", "jyuka", 1L)));
 
         // When & Then
@@ -170,7 +170,7 @@ class PostControllerTest {
         String title = "title";
         String body = "body";
         doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND))
-                .when(postService).modify(anyString(), anyString(), anyString(), anyLong());
+                .when(postService).modify(anyString(), anyString(), anyLong(), anyLong());
         // When & Then
         mockMvc
                 .perform(
@@ -189,7 +189,7 @@ class PostControllerTest {
     @WithMockUser
     void givenPostIdAndUserName_whenDeletePost_thenReturnSuccess() throws Exception {
         // Given
-        willDoNothing().given(postService).delete(anyString(), anyLong());
+        willDoNothing().given(postService).delete(anyLong(), anyLong());
 
         // When & Then
         mockMvc
@@ -228,7 +228,7 @@ class PostControllerTest {
     void givenPostIdWithAnotherUser_whenDeletePost_thenReturnException() throws Exception {
         // Given
         doThrow(new SnsApplicationException(ErrorCode.INVALID_PERMISSION))
-                .when(postService).delete(anyString(), anyLong());
+                .when(postService).delete(anyLong(), anyLong());
 
         // When & Then
         mockMvc
@@ -248,7 +248,7 @@ class PostControllerTest {
     void givenNotExistPost_whenDeletePost_thenReturnException() throws Exception {
         // Given
         doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND))
-                .when(postService).delete(anyString(), anyLong());
+                .when(postService).delete(anyLong(), anyLong());
 
         // When & Then
         mockMvc
@@ -305,7 +305,7 @@ class PostControllerTest {
     @WithMockUser
     void giveNothingWithLogin_whenMySelectPostList_thenReturnSuccess() throws Exception {
         // Given
-        given(postService.my(anyString(), any(Pageable.class)))
+        given(postService.my(anyLong(), any(Pageable.class)))
                 .willReturn(Page.empty());
 
         // When & Then
@@ -342,7 +342,7 @@ class PostControllerTest {
     @WithMockUser
     void givenNothing_whenClickLikeButton_thenReturnSuccess() throws Exception {
         // Given
-        willDoNothing().given(postService).like(anyLong(), anyString());
+        willDoNothing().given(postService).like(anyLong(), anyLong());
 
         // When & Then
         mockMvc
@@ -354,7 +354,7 @@ class PostControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
         ;
-        then(postService).should().like(anyLong(), anyString());
+        then(postService).should().like(anyLong(), anyLong());
     }
 
     @DisplayName("좋아요 기능 클릭시 로그인 하지 않은 경우")
@@ -380,7 +380,7 @@ class PostControllerTest {
     void givenNotExistPost_whenClickLikeButton_thenReturnFail() throws Exception {
         // Given
         doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND))
-                .when(postService).like(anyLong(), anyString());
+                .when(postService).like(anyLong(), anyLong());
 
         // When & Then
         mockMvc
@@ -401,7 +401,7 @@ class PostControllerTest {
         // Given
         String comment = "is comment";
         PostCommentRequest postCommentRequest = PostCommentRequest.of(comment);
-        willDoNothing().given(postService).comment(anyLong(), anyString(), any(PostCommentRequest.class));
+        willDoNothing().given(postService).comment(anyLong(), anyLong(), any(PostCommentRequest.class));
 
         // When & Then
         mockMvc
@@ -414,7 +414,7 @@ class PostControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
         ;
-        then(postService).should().comment(anyLong(), anyString(), any(PostCommentRequest.class));
+        then(postService).should().comment(anyLong(), anyLong(), any(PostCommentRequest.class));
     }
 
     @DisplayName("댓글 작성시 로그인 하지 않은 경우")
@@ -445,7 +445,7 @@ class PostControllerTest {
         String comment = "is comment";
         PostCommentRequest postCommentRequest = PostCommentRequest.of(comment);
         doThrow(new SnsApplicationException(ErrorCode.POST_NOT_FOUND))
-                .when(postService).comment(anyLong(), anyString(), any(PostCommentRequest.class));
+                .when(postService).comment(anyLong(), anyLong(), any(PostCommentRequest.class));
 
         // When & Then
         mockMvc
@@ -458,7 +458,7 @@ class PostControllerTest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
         ;
-        then(postService).should().comment(anyLong(), anyString(), any(PostCommentRequest.class));
+        then(postService).should().comment(anyLong(), anyLong(), any(PostCommentRequest.class));
     }
 
 

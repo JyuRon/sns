@@ -10,6 +10,7 @@ import com.example.dto.response.PostResponse;
 import com.example.dto.response.Response;
 import com.example.service.PostService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/posts")
+@Slf4j
 public class PostController {
 
     private final PostService postService;
@@ -28,9 +30,8 @@ public class PostController {
             @RequestBody PostCreatRequest request,
             @AuthenticationPrincipal UserDto userDto
     ){
-        postService.create(request.getTitle(), request.getBody(), userDto.getUsername());
-
-
+        log.info("[PostController][POST][create]");
+        postService.create(request.getTitle(), request.getBody(), userDto.getId());
         return Response.success();
     }
 
@@ -40,7 +41,8 @@ public class PostController {
             @AuthenticationPrincipal UserDto userDto,
             @PathVariable Long postId
     ){
-        PostDto postDto = postService.modify(request.getTitle(), request.getBody(), userDto.getUsername(), postId);
+        log.info("[PostController][PUT][modify]");
+        PostDto postDto = postService.modify(request.getTitle(), request.getBody(), userDto.getId(), postId);
 
         return Response.success(PostResponse.fromDto(postDto));
     }
@@ -50,7 +52,8 @@ public class PostController {
             @AuthenticationPrincipal UserDto userDto,
             @PathVariable Long postId
     ){
-        postService.delete(userDto.getUsername(), postId);
+        log.info("[PostController][DELETE][delete]");
+        postService.delete(userDto.getId(), postId);
         return Response.success();
     }
 
@@ -60,6 +63,7 @@ public class PostController {
             Pageable pageable,
             @AuthenticationPrincipal UserDto userDto
     ){
+        log.info("[PostController][GET][list]");
         Page<PostResponse> result = postService.list(pageable).map(PostResponse::fromDto);
         return Response.success(result);
     }
@@ -69,7 +73,8 @@ public class PostController {
             Pageable pageable,
             @AuthenticationPrincipal UserDto userDto
     ){
-        Page<PostResponse> result = postService.my(userDto.getUsername(), pageable).map(PostResponse::fromDto);
+        log.info("[PostController][GET][my]");
+        Page<PostResponse> result = postService.my(userDto.getId(), pageable).map(PostResponse::fromDto);
         return Response.success(result);
     }
 
@@ -78,7 +83,8 @@ public class PostController {
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDto userDto
     ){
-        postService.like(postId, userDto.getUsername());
+        log.info("[PostController][POST][like]");
+        postService.like(postId, userDto.getId());
         return Response.success();
     }
 
@@ -87,6 +93,7 @@ public class PostController {
             @PathVariable Long postId,
             @AuthenticationPrincipal UserDto userDto
     ){
+        log.info("[PostController][GET][likeCount]");
         return Response.success(postService.likeCount(postId));
     }
 
@@ -97,7 +104,8 @@ public class PostController {
             @RequestBody PostCommentRequest request,
             @AuthenticationPrincipal UserDto userDto
     ){
-        postService.comment(postId, userDto.getUsername(), request);
+        log.info("[PostController][POST][comment]");
+        postService.comment(postId, userDto.getId(), request);
         return Response.success();
     }
 
@@ -107,6 +115,7 @@ public class PostController {
             @AuthenticationPrincipal UserDto userDto,
             Pageable pageable
     ){
+        log.info("[PostController][GET][comment]");
         return Response.success(
                 postService.getComments(postId, pageable)
                 .map(CommentResponse::fromDto)

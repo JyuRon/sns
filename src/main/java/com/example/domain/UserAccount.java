@@ -27,10 +27,15 @@ public class UserAccount extends BaseEntity{
     @Convert(converter = UserRoleConverter.class)
     private UserRole role;
 
-    private UserAccount(String userName, String password, UserRole role) {
+    private UserAccount(Long userId, String userName, String password, UserRole role) {
+        this.id = userId;
         this.userName = userName;
         this.password = password;
         this.role = role;
+    }
+
+    public static UserAccount of(Long id, String userName){
+        return UserAccount.of(id, userName, null, UserRole.USER);
     }
 
     public static UserAccount of(String userName, String password){
@@ -38,6 +43,10 @@ public class UserAccount extends BaseEntity{
     }
 
     public static UserAccount of(String userName, String password, UserRole role){
-        return new UserAccount(userName, password, role);
+        return UserAccount.of(null, userName, password, role);
+    }
+
+    public static UserAccount of(Long id, String userName, String password, UserRole role){
+        return new UserAccount(id, userName, password, role);
     }
 }

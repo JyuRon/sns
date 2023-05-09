@@ -29,17 +29,15 @@ public class PostService {
     private final AlarmRepository alarmRepository;
 
     @Transactional
-    public void create(String title, String body, String userName){
-        UserAccount userAccount = checkInvalidUserName(userName);
+    public void create(String title, String body, Long userId){
+        UserAccount userAccount = checkInvalidUserName(userId);
         postRepository.save(Post.of(title, body, userAccount));
     }
 
     @Transactional
-    public PostDto modify(String title, String body, String userName, Long postId){
-        UserAccount userAccount = checkInvalidUserName(userName);
+    public PostDto modify(String title, String body, Long userId, Long postId){
         Post post = getPost(postId);
-
-        checkAccessPost(userAccount, post);
+        checkAccessPost(userId, post);
 
         post.setTitle(title);
         post.setBody(body);
@@ -47,10 +45,10 @@ public class PostService {
     }
 
     @Transactional
-    public void delete(String userName, Long postId){
-        UserAccount userAccount = checkInvalidUserName(userName);
+    public void delete(Long userId, Long postId){
         Post post = getPost(postId);
-        checkAccessPost(userAccount, post);
+        checkAccessPost(userId, post);
+
         postRepository.delete(post);
         likeRepository.deleteAllByPost(post);
         commentRepository.deleteAllByPost(post);
@@ -60,21 +58,20 @@ public class PostService {
         return postRepository.findAll(pageable).map(PostDto::fromEntity);
     }
 
-    public Page<PostDto> my(String userName, Pageable pageable){
-        UserAccount userAccount = checkInvalidUserName(userName);
-        return postRepository.findAllByUser(userAccount, pageable).map(PostDto::fromEntity);
+    public Page<PostDto> my(Long userId, Pageable pageable){
+        return postRepository.findAllByUserId(userId, pageable).map(PostDto::fromEntity);
     }
 
     @Transactional
-    public void like(Long postId, String userName) {
-        UserAccount userAccount = checkInvalidUserName(userName);
-        Post post = getPost(postId);
+    public void like(Long postId, Long userId) {
 
-        Optional<Like> like = likeRepository.findByUserAndPost(userAccount, post);
+        Optional<Like> like = likeRepository.findByUserIdAndPostId(userId, postId);
 
         if(like.isPresent()){
             likeRepository.delete(like.get());
         }else {
+            UserAccount userAccount = checkInvalidUserName(userId);
+            Post post = getPost(postId);
             likeRepository.save(Like.of(userAccount, post));
             alarmRepository.save(
                     Alarm.of(
@@ -88,14 +85,12 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Long likeCount(Long postId){
-        Post post = getPost(postId);
-
-        return likeRepository.countByPost(post);
+        return likeRepository.countByPostId(postId);
     }
 
     @Transactional
-    public void comment(Long postId, String userName, PostCommentRequest postCommentRequest){
-        UserAccount userAccount = checkInvalidUserName(userName);
+    public void comment(Long postId, Long userId, PostCommentRequest postCommentRequest){
+        UserAccount userAccount = checkInvalidUserName(userId);
         Post post = getPost(postId);
 
         commentRepository.save(
@@ -115,15 +110,13 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<CommentDto> getComments(Long postId, Pageable pageable) {
-        Post post = getPost(postId);
-
-        return commentRepository.findAllByPost(post, pageable)
+        return commentRepository.findAllByPostId(postId, pageable)
                 .map(CommentDto::fromEntity);
     }
 
-    private UserAccount checkInvalidUserName(String userName){
-        return userAccountRepository.findByUserName(userName)
-                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
+    private UserAccount checkInvalidUserName(Long userId){
+        return userAccountRepository.findById(userId)
+                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userId)));
     }
 
     private Post getPost(Long postId){
@@ -131,9 +124,9 @@ public class PostService {
                 new SnsApplicationException(ErrorCode.POST_NOT_FOUND, String.format("%s not founded", postId)));
     }
 
-    private void checkAccessPost(UserAccount userAccount, Post post){
-        if (post.getUser() != userAccount){
-            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission with %s", userAccount.getUserName(), post.getId()));
+    private void checkAccessPost(Long userId, Post post){
+        if (!post.getUser().getId().equals(userId)){
+            throw new SnsApplicationException(ErrorCode.INVALID_PERMISSION, String.format("%s has no permission with %s", userId, post.getId()));
         }
     }
 
