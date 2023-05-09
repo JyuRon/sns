@@ -35,7 +35,7 @@ public class Alarm extends BaseEntity{
 
 
     // 알람 수신자의 정보
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userAccount_id")
     private UserAccount user;
 

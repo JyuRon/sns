@@ -40,7 +40,7 @@ public class UserController {
             Pageable pageable
     ){
         return Response.success(
-                userService.alarmList(userDto.getUsername(), pageable)
+                userService.alarmList(userDto.getId(), pageable)
                 .map(AlarmResponse::fromDto)
         );
     }

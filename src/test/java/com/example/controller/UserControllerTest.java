@@ -166,7 +166,7 @@ class UserControllerTest {
         //Given
         given(userService.loadUserByUserName(anyString()))
                 .willReturn(createUserAccountDto());
-        given(userService.alarmList(anyString(), any(Pageable.class)))
+        given(userService.alarmList(anyLong(), any(Pageable.class)))
                 .willReturn(Page.empty());
 
         //When & Then

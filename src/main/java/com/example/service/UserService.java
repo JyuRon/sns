@@ -9,7 +9,6 @@ import com.example.repository.AlarmRepository;
 import com.example.repository.UserAccountRepository;
 import com.example.util.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -62,9 +61,8 @@ public class UserService {
                         new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
     }
 
-    public Page<AlarmDto> alarmList(String userName, Pageable pageable) {
-        UserAccount userAccount = checkInvalidUserName(userName);
-        return alarmRepository.findByUser(userAccount, pageable)
+    public Page<AlarmDto> alarmList(Long userId, Pageable pageable) {
+        return alarmRepository.findAllByUser_Id(userId, pageable)
                 .map(AlarmDto::fromEntity);
     }
 

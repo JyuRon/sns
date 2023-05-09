@@ -7,6 +7,7 @@ import com.example.domain.UserAccount;
 import com.example.repository.AlarmRepository;
 import com.example.repository.UserAccountRepository;
 import com.example.util.JwtTokenUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -156,39 +157,34 @@ class UserServiceTest {
     @Test
     void givenUserNameAndPageable_whenSelectAlarmList_thenReturnSuccess(){
         // Given
-        String userName = "userName";
-        String password = "password";
-        UserAccount userEntity = UserAccountFixture.get(userName, password);
+        Long userId = 1L;
         Pageable pageable = Pageable.ofSize(20);
 
-        given(userEntityRepository.findByUserName(anyString()))
-                .willReturn(Optional.of(userEntity));
-        given(alarmRepository.findByUser(userEntity, pageable))
+        given(alarmRepository.findAllByUser_Id(userId, pageable))
                 .willReturn(Page.empty());
 
         // When
-        Throwable t = catchThrowable(() -> userService.alarmList(userName, pageable));
+        Throwable t = catchThrowable(() -> userService.alarmList(userId, pageable));
 
         // Then
         assertThat(t).doesNotThrowAnyException();
     }
 
+    @Disabled("jwt 에서 이미 로그인 여부를 판단하기 때문에 비활성화")
     @DisplayName("알림 리스트 조회 시 로그인을 하지 않은 경우")
     @Test
     void givenPageable_whenSelectAlarmList_thenReturnUserNotFoundException(){
         // Given
-        String userName = "jyuka";
+        Long userId = 1L;
         Pageable pageable = Pageable.ofSize(20);
-        given(userEntityRepository.findByUserName(anyString()))
-                .willReturn(Optional.empty());
 
         // When
-        Throwable t = catchThrowable(() -> userService.alarmList(userName, pageable));
+        Throwable t = catchThrowable(() -> userService.alarmList(userId, pageable));
 
         // Then
         assertThat(t)
                 .isInstanceOf(SnsApplicationException.class)
-                .hasMessage(String.format("%s %s", ErrorCode.USER_NOT_FOUND.getMessage(), String.format("%s not founded",userName)))
+                .hasMessage(String.format("%s %s", ErrorCode.USER_NOT_FOUND.getMessage(), String.format("%s not founded",userId)))
         ;
     }
 

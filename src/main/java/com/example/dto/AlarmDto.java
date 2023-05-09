@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 public class AlarmDto {
 
     private Long id;
-    private UserDto user;
     private AlarmType alarmType;
     private AlarmArgs args;
     private LocalDateTime registerAt;
@@ -23,7 +22,6 @@ public class AlarmDto {
     public static AlarmDto fromEntity(Alarm alarm){
         return AlarmDto.of(
                 alarm.getId(),
-                UserDto.fromEntity(alarm.getUser()),
                 alarm.getAlarmType(),
                 alarm.getAlarmArgs(),
                 alarm.getRegisterAt(),
@@ -32,7 +30,7 @@ public class AlarmDto {
         );
     }
 
-    public static AlarmDto of(Long id, UserDto user, AlarmType alarmType, AlarmArgs alarmArgs, LocalDateTime registerAt, LocalDateTime updatedAt, LocalDateTime deletedAt) {
-        return new AlarmDto(id, user, alarmType, alarmArgs, registerAt, updatedAt, deletedAt);
+    public static AlarmDto of(Long id, AlarmType alarmType, AlarmArgs alarmArgs, LocalDateTime registerAt, LocalDateTime updatedAt, LocalDateTime deletedAt) {
+        return new AlarmDto(id, alarmType, alarmArgs, registerAt, updatedAt, deletedAt);
     }
 }
