@@ -13,6 +13,9 @@ spring:
     # OSIV 끔
     # 참고 URL : https://ykh6242.tistory.com/entry/JPA-OSIVOpen-Session-In-View%EC%99%80-%EC%84%B1%EB%8A%A5-%EC%B5%9C%EC%A0%81%ED%99%94
     open-in-view: false
+  redis:
+    host: localhost
+    port: 6379
 
 kakao:
   rest:

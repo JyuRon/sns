@@ -14,3 +14,10 @@ services:                                               # 컨테이너의 집합
 #      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+  sns-redis:
+    container_name: sns-redis
+    image: 'redis:6'
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: "Asia/Seoul"
