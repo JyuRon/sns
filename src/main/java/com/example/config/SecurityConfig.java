@@ -25,7 +25,6 @@ public class SecurityConfig {
     ) throws Exception {
         return http
                 .authorizeHttpRequests(auth -> auth
-                                .mvcMatchers("/api/*/users/join","/api/*/users/login").permitAll()
                                 .mvcMatchers("/api/**").authenticated()
                         )
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -38,7 +37,10 @@ public class SecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer(){
-        return (web) -> web.ignoring().regexMatchers("^(?!/api/).*");
+        return (web) -> web.ignoring()
+                .regexMatchers("^(?!/api/).*")
+                .antMatchers("/api/*/users/join","/api/*/users/login")
+                ;
     }
 
     @Bean
