@@ -20,8 +20,10 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+@NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserDto implements UserDetails {
 
     private Long id;
@@ -56,33 +58,47 @@ public class UserDto implements UserDetails {
         return new UserDto(id, userName, password, userRole, registerAt, updatedAt, null);
     }
 
+    @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(this.getUserRole().toString()));
     }
 
-    @Override
-    public String getUsername() {
-        return this.userName;
-    }
-
+    @JsonIgnore
     @Override
     public boolean isAccountNonExpired() {
         return deletedAt == null;
     }
 
+    @JsonIgnore
     @Override
     public boolean isAccountNonLocked() {
         return deletedAt == null;
     }
 
+    @JsonIgnore
     @Override
     public boolean isCredentialsNonExpired() {
         return deletedAt == null;
     }
 
+    @JsonIgnore
     @Override
     public boolean isEnabled() {
         return deletedAt == null;
+    }
+
+    @JsonIgnore
+    @Override
+    public String toString() {
+        return "UserDto{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", userRole=" + userRole +
+                ", registerAt=" + registerAt +
+                ", updatedAt=" + updatedAt +
+                ", deletedAt=" + deletedAt +
+                '}';
     }
 }
