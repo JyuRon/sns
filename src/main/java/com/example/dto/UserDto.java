@@ -27,7 +27,7 @@ import java.util.List;
 public class UserDto implements UserDetails {
 
     private Long id;
-    private String userName;
+    private String username;
     private String password;
     private UserRole userRole;
 
