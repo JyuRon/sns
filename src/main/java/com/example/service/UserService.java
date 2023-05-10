@@ -7,6 +7,7 @@ import com.example.dto.UserDto;
 import com.example.domain.UserAccount;
 import com.example.repository.AlarmRepository;
 import com.example.repository.UserAccountRepository;
+import com.example.repository.UserCacheRepository;
 import com.example.util.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ public class UserService {
     private final AlarmRepository alarmRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenUtils jwtTokenUtils;
+    private final UserCacheRepository userCacheRepository;
 
 
     @Transactional
@@ -40,35 +42,32 @@ public class UserService {
 
     public String login(String userName, String password){
         // 회원 여부 확인
-        UserAccount userAccount = checkInvalidUserName(userName);
+        UserDto userDto = loadUserByUserName(userName);
+
+        // redis input caching
+        userCacheRepository.setUser(userDto);
 
         // 패스워트 확인
-        if(!passwordEncoder.matches(password, userAccount.getPassword())){
+        if(!passwordEncoder.matches(password, userDto.getPassword())){
             throw new SnsApplicationException(ErrorCode.INVALID_PASSWORD);
         }
 
         // 토큰생성
         String token = jwtTokenUtils.generateToken(userName);
-
-
         return token;
     }
 
     public UserDto loadUserByUserName(String userName) {
-        return userEntityRepository.findByUserName(userName)
-                .map(UserDto::fromEntity)
-                .orElseThrow(() ->
-                        new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
+        return userCacheRepository.getUser(userName).orElseGet(() ->
+            userEntityRepository.findByUserName(userName)
+                    .map(UserDto::fromEntity)
+                    .orElseThrow(() ->
+                            new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)))
+        );
     }
 
     public Page<AlarmDto> alarmList(Long userId, Pageable pageable) {
         return alarmRepository.findAllByUser_Id(userId, pageable)
                 .map(AlarmDto::fromEntity);
-    }
-
-
-    private UserAccount checkInvalidUserName(String userName){
-        return userEntityRepository.findByUserName(userName)
-                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND, String.format("%s not founded", userName)));
     }
 }

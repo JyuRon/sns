@@ -6,6 +6,7 @@ import com.example.fixture.UserAccountFixture;
 import com.example.domain.UserAccount;
 import com.example.repository.AlarmRepository;
 import com.example.repository.UserAccountRepository;
+import com.example.repository.UserCacheRepository;
 import com.example.util.JwtTokenUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -29,20 +30,12 @@ import static org.mockito.Mockito.mock;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @InjectMocks
-    private UserService userService;
-
-    @Mock
-    private UserAccountRepository userEntityRepository;
-
-    @Mock
-    private AlarmRepository alarmRepository;
-
-    @Mock
-    private BCryptPasswordEncoder encoder;
-
-    @Mock
-    private JwtTokenUtils jwtTokenUtils;
+    @InjectMocks private UserService userService;
+    @Mock private UserAccountRepository userEntityRepository;
+    @Mock private AlarmRepository alarmRepository;
+    @Mock private BCryptPasswordEncoder encoder;
+    @Mock private JwtTokenUtils jwtTokenUtils;
+    @Mock private UserCacheRepository userCacheRepository;
 
     @DisplayName("회원가입이 정상적으로 동작하는 경우")
     @Test
