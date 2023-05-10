@@ -27,6 +27,7 @@ public class PostService {
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
     private final AlarmRepository alarmRepository;
+    private final AlarmService alarmService;
 
     @Transactional
     public void create(String title, String body, Long userId){
@@ -73,13 +74,15 @@ public class PostService {
             UserAccount userAccount = checkInvalidUserName(userId);
             Post post = getPost(postId);
             likeRepository.save(Like.of(userAccount, post));
-            alarmRepository.save(
+            Alarm alarm = alarmRepository.save(
                     Alarm.of(
                             post.getUser(),
                             AlarmType.LIKE_ON_POST,
                             AlarmArgs.of(userAccount.getId(), post.getId())
                     )
             );
+
+            alarmService.send(alarm.getId(), post.getUser().getId());
         }
     }
 
@@ -97,7 +100,7 @@ public class PostService {
                 Comment.of(postCommentRequest.getComment(), post, userAccount)
         );
 
-        alarmRepository.save(
+        Alarm alarm = alarmRepository.save(
                 Alarm.of(
                         post.getUser(),
                         AlarmType.NEW_COMMENT_ON_POST,
@@ -105,6 +108,7 @@ public class PostService {
                 )
         );
 
+        alarmService.send(alarm.getId(), post.getUser().getId());
     }
 
 
