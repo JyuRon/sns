@@ -39,6 +39,14 @@ dependencies {
 
 	// Alarm Column JsonB 의 경우 JPA 가 지원하는 타입이 아닌 postgres 고유의 특성으로 이를 위해 추가
 	implementation 'com.vladmihalcea:hibernate-types-52:2.17.3'
+
+	// test-container
+	testImplementation "org.junit.jupiter:junit-jupiter:5.8.1"
+	testImplementation "org.testcontainers:testcontainers:1.18.0"
+	testImplementation "org.testcontainers:junit-jupiter:1.18.0"
+
+	// redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 tasks.named('test') {
