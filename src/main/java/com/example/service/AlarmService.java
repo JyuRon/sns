@@ -1,8 +1,13 @@
 package com.example.service;
 
 import com.example.constant.ErrorCode;
+import com.example.domain.Alarm;
+import com.example.domain.UserAccount;
 import com.example.exception.SnsApplicationException;
+import com.example.kafka.AlarmEvent;
+import com.example.repository.AlarmRepository;
 import com.example.repository.EmitterRepository;
+import com.example.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +21,8 @@ import java.io.IOException;
 public class AlarmService {
 
     private final EmitterRepository emitterRepository;
+    private final AlarmRepository alarmRepository;
+    private final UserAccountRepository userAccountRepository;
     private final static Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
     private final static String ALARM_NAME = "alarm";
 
@@ -42,10 +49,20 @@ public class AlarmService {
 
     }
 
-    public void send(Long alarmId, Long userId) {
-        emitterRepository.get(userId).ifPresentOrElse(sseEmitter -> {
+    public void send(AlarmEvent event) {
+        UserAccount userAccount = userAccountRepository.findById(event.getReceiveUserID())
+                .orElseThrow(() -> new SnsApplicationException(ErrorCode.USER_NOT_FOUND));
+        // only SSE send
+        Alarm alarm = alarmRepository.save(
+                Alarm.of(
+                        userAccount,
+                        event.getAlarmType(),
+                        event.getAlarmArgs()
+                )
+        );
+        emitterRepository.get(event.getReceiveUserID()).ifPresentOrElse(sseEmitter -> {
             try{
-                sseEmitter.send(SseEmitter.event().id(alarmId.toString()).name(ALARM_NAME).data("new alarm"));
+                sseEmitter.send(SseEmitter.event().id(alarm.getId().toString()).name(ALARM_NAME).data("new alarm"));
             }catch (IOException e){
                 e.printStackTrace();
                 throw new SnsApplicationException(ErrorCode.ALARM_CONNECT_ERROR);
