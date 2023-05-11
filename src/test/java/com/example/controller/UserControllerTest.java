@@ -8,6 +8,7 @@ import com.example.dto.request.UserJoinRequest;
 import com.example.dto.request.UserLoginRequest;
 import com.example.exception.SnsApplicationException;
 import com.example.fixture.UserAccountFixture;
+import com.example.service.AlarmService;
 import com.example.service.UserService;
 import com.example.util.FormDataEncoder;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 
@@ -40,8 +42,8 @@ class UserControllerTest {
     private final MockMvc mockMvc;
     private final FormDataEncoder formDataEncoder;
 
-    @MockBean
-    private UserService userService;
+    @MockBean private UserService userService;
+    @MockBean private AlarmService alarmService;
 
     UserControllerTest(
             @Autowired MockMvc mockMvc,
@@ -195,6 +197,47 @@ class UserControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isUnauthorized())
+        ;
+    }
+
+    @DisplayName("알림 SSE 접속시도후 성공한다.")
+    @Test
+    @WithMockUser
+    void givenQueryParamWithJwtToken_whenConectSSE_thenReturnSuccess() throws Exception{
+        //Given
+        given(userService.loadUserByUserName(anyString()))
+                .willReturn(createUserAccountDto());
+        given(alarmService.connectAlarm(anyLong())).willReturn(any(SseEmitter.class));
+        //When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/users/alarm/subscribe")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .queryParam("token","Bearer testToken")
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+        ;
+    }
+
+    @DisplayName("알림 SSE 접속시도 실패시 에러를 반환한다.")
+    @Test
+    @WithMockUser
+    void givenQueryParamWithJwtToken_whenDisConectSSE_thenReturnException() throws Exception{
+        //Given
+        given(userService.loadUserByUserName(anyString()))
+                .willReturn(createUserAccountDto());
+        given(alarmService.connectAlarm(anyLong()))
+                .willThrow(new SnsApplicationException(ErrorCode.ALARM_CONNECT_ERROR));
+        //When & Then
+        mockMvc
+                .perform(
+                        get("/api/v1/users/alarm/subscribe")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .queryParam("token","Bearer testToken")
+                )
+                .andDo(print())
+                .andExpect(status().is5xxServerError())
         ;
     }
 

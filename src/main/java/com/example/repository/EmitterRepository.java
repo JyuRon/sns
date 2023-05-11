@@ -1,5 +1,6 @@
 package com.example.repository;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -12,6 +13,7 @@ import java.util.Optional;
 @Slf4j
 public class EmitterRepository {
 
+    @Getter
     private Map<String, SseEmitter> emitterMap = new HashMap<>();
 
     public SseEmitter save(Long userId, SseEmitter sseEmitter){
@@ -30,7 +32,7 @@ public class EmitterRepository {
     public void delete(Long userId){
         emitterMap.remove(getKey(userId));
     }
-    private String getKey(Long userId){
+    public String getKey(Long userId){
         return "EMITTER:UID:" + userId;
     }
 }
