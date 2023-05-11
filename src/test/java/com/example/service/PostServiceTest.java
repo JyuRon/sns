@@ -6,6 +6,7 @@ import com.example.domain.*;
 import com.example.domain.columnDef.AlarmArgs;
 import com.example.dto.request.PostCommentRequest;
 import com.example.exception.SnsApplicationException;
+import com.example.kafka.KafkaProducer;
 import com.example.repository.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +33,7 @@ class PostServiceTest {
     @Mock private UserAccountRepository userAccountRepository;
     @Mock private LikeRepository likeRepository;
     @Mock private CommentRepository commentRepository;
-    @Mock private AlarmRepository alarmRepository;
+    @Mock private KafkaProducer kafkaProducer;
 
 
 
@@ -261,7 +262,7 @@ class PostServiceTest {
         given(userAccountRepository.findById(anyLong())).willReturn(Optional.of(userAccount));
         given(postRepository.findById(anyLong())).willReturn(Optional.of(post));
         given(likeRepository.save(any(Like.class))).willReturn(Like.of(userAccount, post));
-        given(alarmRepository.save(any(Alarm.class))).willReturn(alarm);
+        willDoNothing().given(kafkaProducer).sendMessage(any());
 
         // When
         Throwable t = catchThrowable(() -> postService.like(postId, userId));
@@ -272,8 +273,7 @@ class PostServiceTest {
         then(userAccountRepository).should().findById(anyLong());
         then(postRepository).should().findById(anyLong());
         then(likeRepository).should().save(any(Like.class));
-        then(alarmRepository).should().save(any(Alarm.class));
-
+        then(kafkaProducer).should().sendMessage(any());
     }
 
     @DisplayName("좋아요 버튼 재 클릭 후 카운트가 감소하는 경우")
@@ -298,7 +298,6 @@ class PostServiceTest {
         then(likeRepository).should().delete(any(Like.class));
         then(userAccountRepository).shouldHaveNoInteractions();
         then(postRepository).shouldHaveNoInteractions();
-        then(alarmRepository).shouldHaveNoInteractions();
     }
 
     @DisplayName("좋아요 버튼을 클릭하였지만 게시글이 존재하지 않는 경우")
@@ -356,7 +355,7 @@ class PostServiceTest {
         given(userAccountRepository.findById(anyLong())).willReturn(Optional.of(userAccount));
         given(postRepository.findById(anyLong())).willReturn(Optional.of(post));
         given(commentRepository.save(any(Comment.class))).willReturn(comment);
-        given(alarmRepository.save(any(Alarm.class))).willReturn(alarm);
+        willDoNothing().given(kafkaProducer).sendMessage(any());
 
         // When
         Throwable t = catchThrowable(() -> postService.comment(postId, userId, request));
@@ -364,6 +363,7 @@ class PostServiceTest {
         // Then
         assertThat(t).doesNotThrowAnyException();
         then(commentRepository).should().save(any(Comment.class));
+        then(kafkaProducer).should().sendMessage(any());
     }
 
     @Disabled("jwt 에서 이미 로그인 여부를 판단하기 때문에 비활성화")

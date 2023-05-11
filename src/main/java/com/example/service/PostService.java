@@ -8,6 +8,8 @@ import com.example.dto.CommentDto;
 import com.example.dto.PostDto;
 import com.example.dto.request.PostCommentRequest;
 import com.example.exception.SnsApplicationException;
+import com.example.kafka.AlarmEvent;
+import com.example.kafka.KafkaProducer;
 import com.example.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,8 +28,7 @@ public class PostService {
     private final UserAccountRepository userAccountRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
-    private final AlarmRepository alarmRepository;
-    private final AlarmService alarmService;
+    private final KafkaProducer kafkaProducer;
 
     @Transactional
     public void create(String title, String body, Long userId){
@@ -74,15 +75,15 @@ public class PostService {
             UserAccount userAccount = checkInvalidUserName(userId);
             Post post = getPost(postId);
             likeRepository.save(Like.of(userAccount, post));
-            Alarm alarm = alarmRepository.save(
-                    Alarm.of(
-                            post.getUser(),
+
+            // Kafka + SSE
+            kafkaProducer.sendMessage(
+                    AlarmEvent.of(
+                            post.getUser().getId(),
                             AlarmType.LIKE_ON_POST,
                             AlarmArgs.of(userAccount.getId(), post.getId())
                     )
             );
-
-            alarmService.send(alarm.getId(), post.getUser().getId());
         }
     }
 
@@ -100,15 +101,14 @@ public class PostService {
                 Comment.of(postCommentRequest.getComment(), post, userAccount)
         );
 
-        Alarm alarm = alarmRepository.save(
-                Alarm.of(
-                        post.getUser(),
+        // Kafka + SSE
+        kafkaProducer.sendMessage(
+                AlarmEvent.of(
+                        post.getUser().getId(),
                         AlarmType.NEW_COMMENT_ON_POST,
-                        AlarmArgs.of(userAccount.getId(), postId)
+                        AlarmArgs.of(userAccount.getId(), post.getId())
                 )
         );
-
-        alarmService.send(alarm.getId(), post.getUser().getId());
     }
 
 
