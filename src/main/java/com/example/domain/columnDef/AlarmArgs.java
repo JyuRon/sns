@@ -1,11 +1,12 @@
 package com.example.domain.columnDef;
 
-import com.example.domain.Alarm;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class AlarmArgs {
 
     // 알람을 발생 시킨 사람
